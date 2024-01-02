@@ -2,6 +2,9 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { Tiles } from "./constants/tiles";
+import { basicPathFinding } from "./services/basicPathFinding";
+import { error } from "console";
 
 const http = require("http");
 dotenv.config();
@@ -20,6 +23,17 @@ const serverOptions: any = {};
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
+});
+
+app.post("/basic-path-finding", (req: Request, res: Response) => {
+  const graph: Tiles[][] = req.body.graph;
+  try {
+    const path = basicPathFinding(graph);
+    res.send({ path }).status(200);
+  } catch (err: any) {
+    console.log(err);
+    res.send({ err: err.message }).status(400);
+  }
 });
 
 app.listen(port, () => {
