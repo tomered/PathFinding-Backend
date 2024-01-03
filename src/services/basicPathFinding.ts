@@ -68,10 +68,10 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
     fathers[currentPathTile.i][currentPathTile.j] != startingPosition &&
     fathers[currentPathTile.i][currentPathTile.j] !== undefined
   ) {
-    path.push({ i: currentPathTile.i, j: currentPathTile.j });
     currentPathTile = fathers[currentPathTile.i][currentPathTile.j] as Position;
+    path.push({ i: currentPathTile.i, j: currentPathTile.j });
   }
-  path.push({ i: startingPosition.i, j: startingPosition.j });
+
   path.reverse();
   return path;
 };
