@@ -4,7 +4,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { Tiles } from "./constants/tiles";
 import { basicPathFinding } from "./services/basicPathFinding";
-import { error } from "console";
 
 const http = require("http");
 dotenv.config();
