@@ -26,6 +26,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.post("/basic-path-finding", (req: Request, res: Response) => {
+  console.log("hello");
   const graph: Tiles[][] = req.body.graph;
   try {
     const path = basicPathFinding(graph);
