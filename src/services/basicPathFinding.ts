@@ -50,14 +50,17 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
   while (queue.length > 0) {
     // Pop the first element from the queue
     const currentTile = queue.splice(0, 1)[0];
+
+    if (visited[currentTile.i][currentTile.j] === true) { 
+      console.log("visited in queue why?");
+      continue;
+    }
+
     if (!currentTile) {
       throw new Error("currentTile is undefined");
     }
     // Check if we found the endingTile
     const searchedTile = graph[currentTile.i][currentTile.j];
-    if (currentTile.i == 4 && currentTile.j == 7) {
-      let a;
-    }
     if (searchedTile == Tiles.ENDING_TILE) {
       endingTile = currentTile;
       break;
