@@ -12,14 +12,16 @@ import { getAdjacent } from "./utils";
  * @returns {Position[]} the short path from starting position to the end position
  */
 export const basicPathFinding = (graph: Tiles[][]): Position[] => {
+  const length = graph.length;
+  const width = graph[0].length;
+
   // We use visited to check if we already visited the tile in a given position
-  let visited: boolean[][] = Array.from({ length: graph.length }, () =>
-    Array.from({ length: graph.length }, () => false)
+  let visited: boolean[][] = Array.from({ length }, () =>
+    Array.from({ length: width }, () => false)
   );
   //  Initialize every tile with the tile position of the element who brings us to this tile
-  let fathers: Array<Array<Position | undefined>> = Array.from(
-    { length: graph.length },
-    () => Array.from({ length: graph.length }, () => undefined)
+  let fathers: Array<Array<Position | undefined>> = Array.from({ length }, () =>
+    Array.from({ length: width }, () => undefined)
   );
   let queue: Position[] = [];
   let i: number;
@@ -29,8 +31,8 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
   let path: Position[] = [];
 
   // Find starting position if exists, there is only supposed to be one starting position
-  for (i = 0; i < graph.length; i++) {
-    for (j = 0; j < graph.length; j++) {
+  for (i = 0; i < length; i++) {
+    for (j = 0; j < width; j++) {
       if (graph[i][j] === Tiles.STARTING_TILE && startingPosition) {
         throw new Error("more than one starting position exists");
       }
