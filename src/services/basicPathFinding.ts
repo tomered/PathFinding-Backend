@@ -82,7 +82,6 @@ export const basicPathFinding = (
     }
   }
   if (!endingTile) {
-    // throw new Error("path not exists");
     return { path: [], visitedList: visitedList.reverse() };
   }
   let currentPathTile: Position = endingTile as Position;
