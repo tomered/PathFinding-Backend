@@ -29,8 +29,8 @@ app.post("/basic-path-finding", (req: Request, res: Response) => {
   console.log("hello");
   const graph: Tiles[][] = req.body.graph;
   try {
-    const path = basicPathFinding(graph);
-    res.send({ path }).status(200);
+    const { path, visitedList } = basicPathFinding(graph);
+    res.send({ path, visitedList }).status(200);
   } catch (err: any) {
     console.log(err);
     res.send({ err: err.message }).status(400);

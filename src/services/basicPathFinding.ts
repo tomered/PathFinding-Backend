@@ -11,10 +11,13 @@ import { getAdjacent } from "./utils";
  * @param {Tiles[][]} graph matrix composed of tiles
  * @returns {Position[]} the short path from starting position to the end position
  */
-export const basicPathFinding = (graph: Tiles[][]): Position[] => {
+export const basicPathFinding = (
+  graph: Tiles[][]
+): { path: Position[]; visitedList: Position[] } => {
   const length = graph.length;
   const width = graph[0].length;
 
+  let visitedList: Position[] = [];
   // We use visited to check if we already visited the tile in a given position
   let visited: boolean[][] = Array.from({ length }, () =>
     Array.from({ length: width }, () => false)
@@ -50,8 +53,9 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
   while (queue.length > 0) {
     // Pop the first element from the queue
     const currentTile = queue.splice(0, 1)[0];
+    visitedList.push(currentTile);
 
-    if (visited[currentTile.i][currentTile.j] === true) { 
+    if (visited[currentTile.i][currentTile.j] === true) {
       console.log("visited in queue why?");
       continue;
     }
@@ -78,7 +82,7 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
     }
   }
   if (!endingTile) {
-    throw new Error("path not exists");
+    return { path: [], visitedList: visitedList.reverse() };
   }
   let currentPathTile: Position = endingTile as Position;
   while (
@@ -91,5 +95,6 @@ export const basicPathFinding = (graph: Tiles[][]): Position[] => {
   }
 
   path.reverse();
-  return path;
+  visitedList.reverse();
+  return { path, visitedList };
 };
