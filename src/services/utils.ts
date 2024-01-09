@@ -48,11 +48,12 @@ function isTileValid(
   visited?: boolean[][]
 ) {
   let length = graph.length;
+  let width = graph[0].length;
 
   // Check if the position is in the graph boundaries, if not return false
   const tileOutOfBounds =
     position.i >= length ||
-    position.j >= length ||
+    position.j >= width ||
     position.i < 0 ||
     position.j < 0;
   if (tileOutOfBounds) {
