@@ -16,6 +16,7 @@ export function getAdjacent(
   let adjacentPositions: Position[] = [];
 
   // Check if the position of a neighbor is valid, if so add it to adjacentPositions
+
   if (isTileValid(graph, { i: position.i - 1, j: position.j }, visited)) {
     adjacentPositions.push({ i: position.i - 1, j: position.j });
   }
@@ -61,14 +62,18 @@ function isTileValid(
   }
 
   // Check if visited has been transmitted and the current position is not visited yet
-  const tileVisited = visited
-    ? visited?.[position.i]?.[position.j] === true
-    : false;
+  // const tileVisited = visited
+  //   ? visited?.[position.i]?.[position.j] === true
+  //   : false;
+
+  if (visited !== undefined && visited[position.i][position.j] === true) {
+    return false;
+  }
 
   // Check if the position is not block tile
   const tileBlocked = graph[position.i][position.j] === Tiles.BLOCK_TILE;
 
-  if (tileBlocked || tileVisited) {
+  if (tileBlocked) {
     return false;
   } else {
     return true;
