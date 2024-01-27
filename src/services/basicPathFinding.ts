@@ -21,6 +21,7 @@ export const basicPathFinding = (
   let distance: number[][] = Array.from({ length }, () =>
     Array.from({ length: width }, () => -1)
   );
+  
 
   // We use visited to check if we already visited the tile in a given position
   let visited: boolean[][] = Array.from({ length }, () =>
