@@ -62,9 +62,6 @@ function isTileValid(
   }
 
   // Check if visited has been transmitted and the current position is not visited yet
-  // const tileVisited = visited
-  //   ? visited?.[position.i]?.[position.j] === true
-  //   : false;
 
   if (visited !== undefined && visited[position.i][position.j] === true) {
     return false;

@@ -21,7 +21,6 @@ export const basicPathFinding = (
   let distance: number[][] = Array.from({ length }, () =>
     Array.from({ length: width }, () => -1)
   );
-  
 
   // We use visited to check if we already visited the tile in a given position
   let visited: boolean[][] = Array.from({ length }, () =>
@@ -61,12 +60,6 @@ export const basicPathFinding = (
   while (queue.length > 0) {
     // Pop the first element from the queue
     const currentTile = queue.splice(0, 1)[0];
-    // visitedList.push(currentTile);
-
-    // if (visited[currentTile.i][currentTile.j] === true) {
-    //   console.log("visited in queue why?");
-    //   continue;
-    // }
 
     if (!currentTile) {
       throw new Error("currentTile is undefined");
@@ -77,8 +70,6 @@ export const basicPathFinding = (
       endingTile = currentTile;
       break;
     }
-    // Mark currentTile as visited
-    // visited[currentTile.i][currentTile.j] = true;
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
