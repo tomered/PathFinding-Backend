@@ -13,11 +13,15 @@ import { getAdjacent } from "./utils";
  */
 export const basicPathFinding = (
   graph: Tiles[][]
-): { path: Position[]; visitedList: Position[] } => {
+): { path: Position[]; visitedList: Position[][] } => {
   const length = graph.length;
   const width = graph[0].length;
 
-  let visitedList: Position[] = [];
+  let visitedList: Position[][] = [];
+  let distance: number[][] = Array.from({ length }, () =>
+    Array.from({ length: width }, () => -1)
+  );
+
   // We use visited to check if we already visited the tile in a given position
   let visited: boolean[][] = Array.from({ length }, () =>
     Array.from({ length: width }, () => false)
@@ -50,15 +54,12 @@ export const basicPathFinding = (
   // Add startingPosition to the queue
   queue.push(startingPosition);
 
+  visited[startingPosition.i][startingPosition.j] = true;
+  distance[startingPosition.i][startingPosition.j] = 0;
+
   while (queue.length > 0) {
     // Pop the first element from the queue
     const currentTile = queue.splice(0, 1)[0];
-    visitedList.push(currentTile);
-
-    if (visited[currentTile.i][currentTile.j] === true) {
-      console.log("visited in queue why?");
-      continue;
-    }
 
     if (!currentTile) {
       throw new Error("currentTile is undefined");
@@ -69,18 +70,37 @@ export const basicPathFinding = (
       endingTile = currentTile;
       break;
     }
-    // Mark currentTile as visited
-    visited[currentTile.i][currentTile.j] = true;
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
+    for (let tile of adjacentTiles) {
+      visited[tile.i][tile.j] = true;
+    }
     Array.prototype.push.apply(queue, adjacentTiles);
 
     // Put in the fathers array
     for (const adj of adjacentTiles) {
       fathers[adj.i][adj.j] = currentTile;
+      distance[adj.i][adj.j] = distance[currentTile.i][currentTile.j] + 1;
     }
   }
+  const flatArray = distance.reduce((acc, innerArray) => [
+    ...acc,
+    ...innerArray,
+  ]);
+  let maxDistance = Math.max(...flatArray);
+  for (let i = 0; i <= maxDistance; i++) {
+    visitedList.push([]);
+  }
+  for (let i = 0; i < distance.length; i++) {
+    for (j = 0; j < distance[0].length; j++) {
+      let dist = distance[i][j];
+      if (dist > -1) {
+        visitedList[dist].push({ i, j });
+      }
+    }
+  }
+
   if (!endingTile) {
     return { path: [], visitedList: visitedList.reverse() };
   }
