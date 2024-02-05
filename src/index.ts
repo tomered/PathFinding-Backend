@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import { Tiles } from "./constants/tiles";
 import { basicPathFinding } from "./services/basicPathFinding";
 import { error } from "console";
+import { PathFinding, connectDB } from "./services/db";
 
 const http = require("http");
 dotenv.config();
@@ -21,14 +22,35 @@ app.use(bodyParser.json({ limit: "50mb" }));
 
 const serverOptions: any = {};
 
+connectDB("mongodb://127.0.0.1:27017/pathFinding")
+  .then(() => {
+    console.log("connected");
+  })
+  .catch(() => {});
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-app.post("/basic-path-finding", (req: Request, res: Response) => {
+app.get("/basic-path-finding/getAll", async (req: Request, res: Response) => {
+  const pathFindings = await PathFinding.find(
+    {},
+    { algorithm: true, graph: true, path: true, visitedList: true, _id: false }
+  );
+  res.send({ pathFindings });
+});
+
+app.post("/basic-path-finding", async (req: Request, res: Response) => {
   const graph: Tiles[][] = req.body.graph;
   try {
     const { path, visitedList } = basicPathFinding(graph);
+    const pathFinding = new PathFinding({
+      graph,
+      path,
+      visitedList,
+      algorithm: "basicPathFinding",
+    });
+    await pathFinding.save();
     res.send({ path, visitedList }).status(200);
   } catch (err: any) {
     console.log(err);
