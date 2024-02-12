@@ -5,6 +5,13 @@ import bodyParser from "body-parser";
 import { Tiles } from "./constants/tiles";
 import { basicPathFinding } from "./services/basicPathFinding";
 import { error } from "console";
+import { PathFinding, connectDB } from "./services/db";
+import { DFS } from "./services/dfs";
+import { bidirectionalSearch } from "./services/bidirectionalSearch";
+import { AStarSearch } from "./services/AstarSearch";
+import { algorithmsMap } from "./constants/algorithmsMap";
+import { Position } from "./types/position";
+import { Algorithms } from "./types/Algorithms";
 
 const http = require("http");
 dotenv.config();
@@ -21,14 +28,46 @@ app.use(bodyParser.json({ limit: "50mb" }));
 
 const serverOptions: any = {};
 
+connectDB("mongodb://127.0.0.1:27017/pathFinding")
+  .then(() => {
+    console.log("connected");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-app.post("/basic-path-finding", (req: Request, res: Response) => {
+app.get("/solve-graph/get-all", async (req: Request, res: Response) => {
+  const pathFindings = await PathFinding.find({}).lean();
+  return res.send({ pathFindings });
+});
+
+app.post("/solve-graph", async (req: Request, res: Response) => {
   const graph: Tiles[][] = req.body.graph;
+  const algorithm: Algorithms = req.body.algorithm;
+  console.log("enter the basic-path-finding endpoint");
   try {
-    const { path, visitedList } = basicPathFinding(graph);
+    const algorithmExists = Object.keys(algorithmsMap).includes(algorithm);
+    if (!algorithmExists) {
+      return res.status(400).send("algorithm does not exist");
+    }
+
+    const { path, visitedList, time } = algorithmsMap[algorithm]?.(graph);
+    const searchedTiles = visitedList.length;
+    const pathSize = path.length;
+    const pathFinding = new PathFinding({
+      graph,
+      path,
+      visitedList,
+      time,
+      searchedTiles,
+      pathSize,
+      algorithm,
+    });
+    await pathFinding.save();
     res.send({ path, visitedList }).status(200);
   } catch (err: any) {
     console.log(err);

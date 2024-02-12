@@ -1,17 +1,15 @@
-import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
 import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
 
 /**
- * The function finds the starting point and add it to a queue, afterwards we pop the first element from the queue and use getAdjacent function
- * to check if the neighbors are valid, this function returns an array of valid neighbors.
- * we add the neighbors to the queue and put in the fathers matrix in the position of the neighbors, the position of the element Through which we found them.
- * we do that until we found the end position, than we go through the fathers matrix from the end position until we found the first position and we add each tile in the way to the path.
- * @param {Tiles[][]} graph matrix composed of tiles
- * @returns {Position[]} the short path from starting position to the end position
+ * The function finds the starting position and than push it into a stack, loop over the stack and pop the last element, than push all of its adjacent to the stack,
+ * until we find the ending position.
+ * @param graph matrix composed of tiles
+ * @returns { path: Position[]; visitedList: Position[][]; time: number }  the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
  */
-export const basicPathFinding = (
+
+export const DFS = (
   graph: Tiles[][]
 ): { path: Position[]; visitedList: Position[][]; time: number } => {
   const start = performance.now();
@@ -31,22 +29,22 @@ export const basicPathFinding = (
   let fathers: Array<Array<Position | undefined>> = Array.from({ length }, () =>
     Array.from({ length: width }, () => undefined)
   );
-  let queue: Position[] = [];
+  let stack: Position[] = [];
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined = undefined;
   let path: Position[] = [];
+  let endingTileIsFound: boolean = false;
 
   // Find starting position if exists, there is only supposed to be one starting position
   startingPosition = findElementPosition(graph, Tiles.STARTING_TILE);
-  // Add startingPosition to the queue
-  queue.push(startingPosition);
+  // Add startingPosition to the stack
+  stack.push(startingPosition);
 
   visited[startingPosition.i][startingPosition.j] = true;
   distance[startingPosition.i][startingPosition.j] = 0;
 
-  while (queue.length > 0) {
-    // Pop the first element from the queue
-    const currentTile = queue.splice(0, 1)[0];
+  while (stack.length > 0) {
+    const currentTile = stack.pop();
 
     if (!currentTile) {
       throw new Error("currentTile is undefined");
@@ -60,17 +58,29 @@ export const basicPathFinding = (
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
+    for (let tile of adjacentTiles) {
+      visited[tile.i][tile.j] = true;
+      const currentSearchedAdjTile = graph[tile.i][tile.j];
+      if (currentSearchedAdjTile == Tiles.ENDING_TILE) {
+        endingTile = tile;
+        endingTileIsFound = true;
+        break;
+      }
+    }
 
-    Array.prototype.push.apply(queue, adjacentTiles);
+    Array.prototype.push.apply(stack, adjacentTiles);
 
     // Put in the fathers array
     for (const adj of adjacentTiles) {
-      visited[adj.i][adj.j] = true;
       fathers[adj.i][adj.j] = currentTile;
       distance[adj.i][adj.j] = distance[currentTile.i][currentTile.j] + 1;
     }
+    if (endingTileIsFound === true) {
+      break;
+    }
   }
   visitedList = getVisitedList(distance);
+
   if (!endingTile) {
     const end = performance.now();
     const time = end - start;
@@ -90,5 +100,6 @@ export const basicPathFinding = (
   visitedList.reverse();
   const end = performance.now();
   const time = end - start;
+  console.log(time);
   return { path, visitedList, time };
 };
