@@ -37,20 +37,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.get("/solve-graph/get-all", async (req: Request, res: Response) => {
-  const pathFindings = await PathFinding.find(
-    {},
-    {
-      algorithm: true,
-      graph: true,
-      path: true,
-      visitedList: true,
-      time: true,
-      pathSize: true,
-      searchedTiles: true,
-      _id: false,
-    }
-  );
-  res.send({ pathFindings });
+  const pathFindings = await PathFinding.find({}).lean();
+  return res.send({ pathFindings });
 });
 
 app.post("/solve-graph", async (req: Request, res: Response) => {
