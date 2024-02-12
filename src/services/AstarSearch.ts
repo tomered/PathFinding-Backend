@@ -1,7 +1,8 @@
 import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { getAdjacent } from "./utils";
+import { getAdjacent, getWeight } from "./utils";
+import { TilesWithWeight } from "../types/tilesWithWeight";
 
 /**
  * The function finds the starting point and add it to a queue, afterwards we pop the first element from the queue and use getAdjacent function
@@ -11,7 +12,7 @@ import { getAdjacent } from "./utils";
  * @param {Tiles[][]} graph matrix composed of tiles
  * @returns {Position[]} the short path from starting position to the end position
  */
-export const basicPathFinding = (
+export const AStarSearch = (
   graph: Tiles[][]
 ): { path: Position[]; visitedList: Position[][]; time: number } => {
   const start = performance.now();
@@ -37,6 +38,7 @@ export const basicPathFinding = (
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined = undefined;
   let path: Position[] = [];
+  let minPositionIndex: number = -1;
 
   // Find starting position if exists, there is only supposed to be one starting position
   for (i = 0; i < length; i++) {
@@ -46,6 +48,12 @@ export const basicPathFinding = (
       }
       if (graph[i][j] === Tiles.STARTING_TILE) {
         startingPosition = { i, j };
+      }
+      if (graph[i][j] === Tiles.ENDING_TILE && endingTile) {
+        throw new Error("more than one starting position exists");
+      }
+      if (graph[i][j] === Tiles.ENDING_TILE) {
+        endingTile = { i, j };
       }
     }
   }
@@ -57,33 +65,48 @@ export const basicPathFinding = (
 
   visited[startingPosition.i][startingPosition.j] = true;
   distance[startingPosition.i][startingPosition.j] = 0;
+  if (!endingTile) {
+    throw new Error("there is no ending tile");
+  }
+
+  const graphWithWeight: TilesWithWeight[][] = getWeight(graph, endingTile);
 
   while (queue.length > 0) {
     // Pop the first element from the queue
-    const currentTile = queue.splice(0, 1)[0];
+    const minPosition: Position = getMinimalAdjacent(graphWithWeight, queue);
+    for (i = 0; i < queue.length; i++) {
+      if (queue[i] === minPosition) {
+        minPositionIndex = i;
+        break;
+      }
+    }
 
-    if (!currentTile) {
+    const currentTile = queue.splice(minPositionIndex, 1)[0];
+    if (minPosition.i == endingTile.i && minPosition.j == endingTile.j) {
+      break;
+    }
+
+    if (!minPosition) {
       throw new Error("currentTile is undefined");
     }
     // Check if we found the endingTile
-    const searchedTile = graph[currentTile.i][currentTile.j];
-    if (searchedTile == Tiles.ENDING_TILE) {
-      endingTile = currentTile;
-      break;
-    }
+    // const searchedTile = graph[currentTile.i][currentTile.j];
+    // if (searchedTile == Tiles.ENDING_TILE) {
+    //   endingTile = currentTile;
+    //   break;
+    // }
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
     for (let tile of adjacentTiles) {
       visited[tile.i][tile.j] = true;
+      queue.push(tile);
+      fathers[tile.i][tile.j] = minPosition;
+      distance[tile.i][tile.j] = distance[minPosition.i][minPosition.j] + 1;
     }
-    Array.prototype.push.apply(queue, adjacentTiles);
+    // Array.prototype.push.apply(queue, adjacentTiles);
 
     // Put in the fathers array
-    for (const adj of adjacentTiles) {
-      fathers[adj.i][adj.j] = currentTile;
-      distance[adj.i][adj.j] = distance[currentTile.i][currentTile.j] + 1;
-    }
   }
   const flatArray = distance.reduce((acc, innerArray) => [
     ...acc,
@@ -123,3 +146,19 @@ export const basicPathFinding = (
   console.log(time);
   return { path, visitedList, time };
 };
+
+function getMinimalAdjacent(
+  graph: TilesWithWeight[][],
+  adjacent: Position[]
+): Position {
+  const weights: number[] = adjacent.map((tile: Position) => {
+    const weight = graph[tile.i][tile.j].weight;
+    return weight;
+  });
+
+  const minWeight = Math.min(...weights);
+
+  const minAdjIndex = weights.indexOf(minWeight);
+
+  return adjacent[minAdjIndex];
+}

@@ -20,6 +20,9 @@ const pathFindingSchema = new mongoose.Schema({
   path: [{ i: { type: Number }, j: { type: Number } }],
   visitedList: [[{ i: { type: Number }, j: { type: Number } }]],
   algorithm: { type: String, require: true },
+  time: { type: String },
+  searchedTiles: { type: Number },
+  pathSize: { type: Number },
 });
 
 export const PathFinding = mongoose.model("pathFinding", pathFindingSchema);

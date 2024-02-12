@@ -6,7 +6,11 @@ import { Tiles } from "./constants/tiles";
 import { basicPathFinding } from "./services/basicPathFinding";
 import { error } from "console";
 import { PathFinding, connectDB } from "./services/db";
-
+import { DFS } from "./services/dfs";
+import { bidirectionalSearch } from "./services/bidirectionalSearch";
+import { AStarSearch } from "./services/AstarSearch";
+import { algorithmsMap } from "./constants/algorithmsMap";
+import { Position } from "./types/position";
 const http = require("http");
 dotenv.config();
 
@@ -32,23 +36,46 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
-app.get("/basic-path-finding/getAll", async (req: Request, res: Response) => {
+app.get("/solve-graph/get-all", async (req: Request, res: Response) => {
   const pathFindings = await PathFinding.find(
     {},
-    { algorithm: true, graph: true, path: true, visitedList: true, _id: false }
+    {
+      algorithm: true,
+      graph: true,
+      path: true,
+      visitedList: true,
+      time: true,
+      pathSize: true,
+      searchedTiles: true,
+      _id: false,
+    }
   );
   res.send({ pathFindings });
 });
 
-app.post("/basic-path-finding", async (req: Request, res: Response) => {
+app.post("/solve-graph", async (req: Request, res: Response) => {
   const graph: Tiles[][] = req.body.graph;
+  const algorithm: "bfs" | "dfs" | "bidirectional_search" | "a_star_search" =
+    req.body.algorithm;
+  console.log("enter the basic-path-finding endpoint");
   try {
-    const { path, visitedList } = basicPathFinding(graph);
+    // const { path, visitedList, time } = basicPathFinding(graph);
+    const algorithmExist = Object.keys(algorithmsMap).includes(algorithm);
+    if (!algorithmExist) {
+      return res.status(400).send("algorithm does not exist");
+    }
+
+    const { path, visitedList, time } = algorithmsMap[algorithm]?.(graph);
+    const searchedTiles = visitedList.length;
+    const pathSize = path.length;
     const pathFinding = new PathFinding({
       graph,
       path,
       visitedList,
-      algorithm: "basicPathFinding",
+      time,
+      searchedTiles,
+      pathSize,
+      algorithm,
     });
     await pathFinding.save();
     res.send({ path, visitedList }).status(200);

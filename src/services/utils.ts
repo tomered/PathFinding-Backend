@@ -1,5 +1,6 @@
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
+import { TilesWithWeight } from "../types/tilesWithWeight";
 
 /**
  * This function check if a neighbor is valid in assist of isTileValid function, if is valid we add it to adjacentPositions array and return it at the end of the function
@@ -75,4 +76,29 @@ function isTileValid(
   } else {
     return true;
   }
+}
+
+export function getWeight(
+  graph: Tiles[][],
+  endingTile: Position
+): TilesWithWeight[][] {
+  let i: number;
+  let j: number;
+  const length = graph.length;
+  const width = graph[0].length;
+  const newGraph: Array<Array<TilesWithWeight | undefined>> = Array.from(
+    { length },
+    () => Array.from({ length: width }, () => undefined)
+  );
+
+  for (i = 0; i < length; i++) {
+    for (j = 0; j < width; j++) {
+      const weight: number =
+        (i - endingTile.i) * (i - endingTile.i) +
+        (j - endingTile.j) * (j - endingTile.j);
+      newGraph[i][j] = { tiles: graph[i][j], weight: weight };
+    }
+  }
+
+  return newGraph as TilesWithWeight[][];
 }
