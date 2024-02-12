@@ -2,8 +2,15 @@ import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { FathersPosition } from "../types/FathersPosition";
 import { Position } from "../types/position";
-import { getAdjacent } from "./utils";
+import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
 
+/**
+ * The function finds the start and the end position, both has a queue for the elements we find from start and the elements we find from the end,
+ * than we pop them both, checks their adjacent tiles, push Each of them to the queue accordingly, until we find the tile that connects them, the middle tile.
+ * than we check the path from the start and the path from the end and combine them so at the end we get the path from the start position to the end position
+ * @param graph matrix composed of tiles
+ * @returns the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
+ */
 export const bidirectionalSearch = (
   graph: Tiles[][]
 ): { path: Position[]; visitedList: Position[][]; time: number } => {
@@ -38,8 +45,6 @@ export const bidirectionalSearch = (
   );
   let startQueue: Position[] = [];
   let endQueue: Position[] = [];
-  let i: number;
-  let j: number;
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined;
   let path: Position[] = [];
@@ -53,25 +58,8 @@ export const bidirectionalSearch = (
   let startFromStart: boolean = true;
 
   // Find starting position if exists, there is only supposed to be one starting position
-  for (i = 0; i < length; i++) {
-    for (j = 0; j < width; j++) {
-      if (graph[i][j] === Tiles.STARTING_TILE && startingPosition) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.STARTING_TILE) {
-        startingPosition = { i, j };
-      }
-      if (graph[i][j] === Tiles.ENDING_TILE && endingTile) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.ENDING_TILE) {
-        endingTile = { i, j };
-      }
-    }
-  }
-  if (!startingPosition || !endingTile) {
-    throw new Error("There is not starting  and ending position");
-  }
+  startingPosition = findElementPosition(graph, Tiles.STARTING_TILE);
+  endingTile = findElementPosition(graph, Tiles.ENDING_TILE);
   // Add startingPosition to the queue
   startQueue.push(startingPosition);
   endQueue.push(endingTile);
@@ -160,22 +148,7 @@ export const bidirectionalSearch = (
       break;
     }
   }
-  const flatArray = distance.reduce((acc, innerArray) => [
-    ...acc,
-    ...innerArray,
-  ]);
-  let maxDistance = Math.max(...flatArray);
-  for (let i = 0; i <= maxDistance; i++) {
-    visitedList.push([]);
-  }
-  for (let i = 0; i < distance.length; i++) {
-    for (j = 0; j < distance[0].length; j++) {
-      let dist = distance[i][j];
-      if (dist > -1) {
-        visitedList[dist].push({ i, j });
-      }
-    }
-  }
+  visitedList = getVisitedList(distance);
 
   if (startFromStart === true && middleTile) {
     let middleAdj = getAdjacent(graph, middleTile, visitedStart);
@@ -202,7 +175,6 @@ export const bidirectionalSearch = (
   if (!currentPathFromStartTile || !currentPathFromEndTile) {
     const end = performance.now();
     const time = end - start;
-    // throw new Error("currentPathFromStartTile is undefined");
     return { path: [], visitedList: visitedList.reverse(), time };
   }
   let tileInBounds =
@@ -250,6 +222,5 @@ export const bidirectionalSearch = (
   visitedList.reverse();
   const end = performance.now();
   const time = end - start;
-  console.log(time);
   return { path, visitedList, time };
 };

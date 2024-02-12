@@ -78,6 +78,12 @@ function isTileValid(
   }
 }
 
+/**
+ * The function gets a graph and the ending tile, and gives every tile in the graph its weight based on its distance from the ending tile
+ * @param graph matrix composed of tiles
+ * @param endingTile the ending tile
+ * @returns TilesWithWeight matrix composed of tiles and weight
+ */
 export function getWeight(
   graph: Tiles[][],
   endingTile: Position
@@ -101,4 +107,62 @@ export function getWeight(
   }
 
   return newGraph as TilesWithWeight[][];
+}
+
+/**
+ * The function gets a graph and a tile type to check, we search it in the graph and if we are finding it we return it, if not we throw an error
+ * @param graph matrix composed of tiles
+ * @param element of type Tiles
+ * @returns elementPosition gives the position of an element type
+ */
+export function findElementPosition(
+  graph: Tiles[][],
+  element: Tiles
+): Position {
+  let i: number;
+  let j: number;
+  const length = graph.length;
+  const width = graph[0].length;
+  let elementPosition: Position | undefined = undefined;
+  for (i = 0; i < length; i++) {
+    for (j = 0; j < width; j++) {
+      if (graph[i][j] === element && elementPosition) {
+        throw new Error("more than one starting position exists");
+      }
+      if (graph[i][j] === element) {
+        elementPosition = { i, j };
+      }
+    }
+  }
+  if (!elementPosition) {
+    throw new Error("There is not starting position");
+  }
+  return elementPosition;
+}
+
+/**
+ * The function flat the matrix to an array and finds the max of the array, than get the visited list length be as same as the max distance,
+ * than iterate over the distance matrix and if the number in the node is bigger than -1 push it to the visited list
+ * @param distance the distance from starting position
+ * @returns visitedList the list of the tiles we've been searched in
+ */
+export function getVisitedList(distance: number[][]): Position[][] {
+  let visitedList: Position[][] = [];
+  const flatArray = distance.reduce((acc, innerArray) => [
+    ...acc,
+    ...innerArray,
+  ]);
+  let maxDistance = Math.max(...flatArray);
+  for (let i = 0; i <= maxDistance; i++) {
+    visitedList.push([]);
+  }
+  for (let i = 0; i < distance.length; i++) {
+    for (let j = 0; j < distance[0].length; j++) {
+      let dist = distance[i][j];
+      if (dist > -1) {
+        visitedList[dist].push({ i, j });
+      }
+    }
+  }
+  return visitedList;
 }

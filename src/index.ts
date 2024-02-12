@@ -11,6 +11,8 @@ import { bidirectionalSearch } from "./services/bidirectionalSearch";
 import { AStarSearch } from "./services/AstarSearch";
 import { algorithmsMap } from "./constants/algorithmsMap";
 import { Position } from "./types/position";
+import { Algorithms } from "./types/Algorithms";
+
 const http = require("http");
 dotenv.config();
 
@@ -30,7 +32,9 @@ connectDB("mongodb://127.0.0.1:27017/pathFinding")
   .then(() => {
     console.log("connected");
   })
-  .catch(() => {});
+  .catch((err) => {
+    console.log(err);
+  });
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
@@ -43,13 +47,11 @@ app.get("/solve-graph/get-all", async (req: Request, res: Response) => {
 
 app.post("/solve-graph", async (req: Request, res: Response) => {
   const graph: Tiles[][] = req.body.graph;
-  const algorithm: "bfs" | "dfs" | "bidirectional_search" | "a_star_search" =
-    req.body.algorithm;
+  const algorithm: Algorithms = req.body.algorithm;
   console.log("enter the basic-path-finding endpoint");
   try {
-    // const { path, visitedList, time } = basicPathFinding(graph);
-    const algorithmExist = Object.keys(algorithmsMap).includes(algorithm);
-    if (!algorithmExist) {
+    const algorithmExists = Object.keys(algorithmsMap).includes(algorithm);
+    if (!algorithmExists) {
       return res.status(400).send("algorithm does not exist");
     }
 

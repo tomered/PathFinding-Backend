@@ -1,16 +1,20 @@
 import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { getAdjacent, getWeight } from "./utils";
+import {
+  findElementPosition,
+  getAdjacent,
+  getVisitedList,
+  getWeight,
+} from "./utils";
 import { TilesWithWeight } from "../types/tilesWithWeight";
 
 /**
- * The function finds the starting point and add it to a queue, afterwards we pop the first element from the queue and use getAdjacent function
- * to check if the neighbors are valid, this function returns an array of valid neighbors.
- * we add the neighbors to the queue and put in the fathers matrix in the position of the neighbors, the position of the element Through which we found them.
- * we do that until we found the end position, than we go through the fathers matrix from the end position until we found the first position and we add each tile in the way to the path.
+ * The function finds the starting and ending position, and gives every tile a weight based on the distance of the tile to the ending position,
+ * than we use the getAdjacent function to find all the adjacent of a tile, than we check which of the adjacent has the smallest weight and choose him
+ * until we get the ending tile
  * @param {Tiles[][]} graph matrix composed of tiles
- * @returns {Position[]} the short path from starting position to the end position
+ * @returns { path: Position[]; visitedList: Position[][]; time: number }  the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
  */
 export const AStarSearch = (
   graph: Tiles[][]
@@ -34,32 +38,14 @@ export const AStarSearch = (
   );
   let queue: Position[] = [];
   let i: number;
-  let j: number;
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined = undefined;
   let path: Position[] = [];
   let minPositionIndex: number = -1;
 
-  // Find starting position if exists, there is only supposed to be one starting position
-  for (i = 0; i < length; i++) {
-    for (j = 0; j < width; j++) {
-      if (graph[i][j] === Tiles.STARTING_TILE && startingPosition) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.STARTING_TILE) {
-        startingPosition = { i, j };
-      }
-      if (graph[i][j] === Tiles.ENDING_TILE && endingTile) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.ENDING_TILE) {
-        endingTile = { i, j };
-      }
-    }
-  }
-  if (!startingPosition) {
-    throw new Error("There is not starting position");
-  }
+  // Find starting position end ending position if exists, there is only supposed to be one starting and ending position
+  startingPosition = findElementPosition(graph, Tiles.STARTING_TILE);
+  endingTile = findElementPosition(graph, Tiles.ENDING_TILE);
   // Add startingPosition to the queue
   queue.push(startingPosition);
 
@@ -72,7 +58,7 @@ export const AStarSearch = (
   const graphWithWeight: TilesWithWeight[][] = getWeight(graph, endingTile);
 
   while (queue.length > 0) {
-    // Pop the first element from the queue
+    // Pop the minimal weight position in the queue
     const minPosition: Position = getMinimalAdjacent(graphWithWeight, queue);
     for (i = 0; i < queue.length; i++) {
       if (queue[i] === minPosition) {
@@ -87,14 +73,8 @@ export const AStarSearch = (
     }
 
     if (!minPosition) {
-      throw new Error("currentTile is undefined");
+      throw new Error("minPosition is undefined");
     }
-    // Check if we found the endingTile
-    // const searchedTile = graph[currentTile.i][currentTile.j];
-    // if (searchedTile == Tiles.ENDING_TILE) {
-    //   endingTile = currentTile;
-    //   break;
-    // }
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
@@ -104,26 +84,10 @@ export const AStarSearch = (
       fathers[tile.i][tile.j] = minPosition;
       distance[tile.i][tile.j] = distance[minPosition.i][minPosition.j] + 1;
     }
-    // Array.prototype.push.apply(queue, adjacentTiles);
+  }
+  visitedList = getVisitedList(distance);
 
-    // Put in the fathers array
-  }
-  const flatArray = distance.reduce((acc, innerArray) => [
-    ...acc,
-    ...innerArray,
-  ]);
-  let maxDistance = Math.max(...flatArray);
-  for (let i = 0; i <= maxDistance; i++) {
-    visitedList.push([]);
-  }
-  for (let i = 0; i < distance.length; i++) {
-    for (j = 0; j < distance[0].length; j++) {
-      let dist = distance[i][j];
-      if (dist > -1) {
-        visitedList[dist].push({ i, j });
-      }
-    }
-  }
+  // if there is no path to the ending tile
   if (!endingTile) {
     const end = performance.now();
     const time = end - start;
@@ -143,10 +107,15 @@ export const AStarSearch = (
   visitedList.reverse();
   const end = performance.now();
   const time = end - start;
-  console.log(time);
   return { path, visitedList, time };
 };
 
+/**
+ * The function gets a graph with weights and adjacent and checks who has the minimal weight from them
+ * @param graph matrix composed of tiles and weights
+ * @param adjacent of the current tile
+ * @returns the position of the minimal weight
+ */
 function getMinimalAdjacent(
   graph: TilesWithWeight[][],
   adjacent: Position[]

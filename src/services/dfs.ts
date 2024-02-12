@@ -1,6 +1,13 @@
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { getAdjacent } from "./utils";
+import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
+
+/**
+ * The function finds the starting position and than push it into a stack, loop over the stack and pop the last element, than push all of its adjacent to the stack,
+ * until we find the ending position.
+ * @param graph matrix composed of tiles
+ * @returns { path: Position[]; visitedList: Position[][]; time: number }  the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
+ */
 
 export const DFS = (
   graph: Tiles[][]
@@ -23,27 +30,13 @@ export const DFS = (
     Array.from({ length: width }, () => undefined)
   );
   let stack: Position[] = [];
-  let i: number;
-  let j: number;
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined = undefined;
   let path: Position[] = [];
   let endingTileIsFound: boolean = false;
 
   // Find starting position if exists, there is only supposed to be one starting position
-  for (i = 0; i < length; i++) {
-    for (j = 0; j < width; j++) {
-      if (graph[i][j] === Tiles.STARTING_TILE && startingPosition) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.STARTING_TILE) {
-        startingPosition = { i, j };
-      }
-    }
-  }
-  if (!startingPosition) {
-    throw new Error("There is not starting position");
-  }
+  startingPosition = findElementPosition(graph, Tiles.STARTING_TILE);
   // Add startingPosition to the stack
   stack.push(startingPosition);
 
@@ -86,22 +79,7 @@ export const DFS = (
       break;
     }
   }
-  const flatArray = distance.reduce((acc, innerArray) => [
-    ...acc,
-    ...innerArray,
-  ]);
-  let maxDistance = Math.max(...flatArray);
-  for (let i = 0; i <= maxDistance; i++) {
-    visitedList.push([]);
-  }
-  for (let i = 0; i < distance.length; i++) {
-    for (j = 0; j < distance[0].length; j++) {
-      let dist = distance[i][j];
-      if (dist > -1) {
-        visitedList[dist].push({ i, j });
-      }
-    }
-  }
+  visitedList = getVisitedList(distance);
 
   if (!endingTile) {
     const end = performance.now();

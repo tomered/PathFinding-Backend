@@ -1,7 +1,7 @@
 import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { getAdjacent } from "./utils";
+import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
 
 /**
  * The function finds the starting point and add it to a queue, afterwards we pop the first element from the queue and use getAdjacent function
@@ -32,26 +32,12 @@ export const basicPathFinding = (
     Array.from({ length: width }, () => undefined)
   );
   let queue: Position[] = [];
-  let i: number;
-  let j: number;
   let startingPosition: Position | undefined;
   let endingTile: Position | undefined = undefined;
   let path: Position[] = [];
 
   // Find starting position if exists, there is only supposed to be one starting position
-  for (i = 0; i < length; i++) {
-    for (j = 0; j < width; j++) {
-      if (graph[i][j] === Tiles.STARTING_TILE && startingPosition) {
-        throw new Error("more than one starting position exists");
-      }
-      if (graph[i][j] === Tiles.STARTING_TILE) {
-        startingPosition = { i, j };
-      }
-    }
-  }
-  if (!startingPosition) {
-    throw new Error("There is not starting position");
-  }
+  startingPosition = findElementPosition(graph, Tiles.STARTING_TILE);
   // Add startingPosition to the queue
   queue.push(startingPosition);
 
@@ -74,33 +60,17 @@ export const basicPathFinding = (
 
     // Add currentTile's adjacent if they are valid
     const adjacentTiles = getAdjacent(graph, currentTile, visited);
-    for (let tile of adjacentTiles) {
-      visited[tile.i][tile.j] = true;
-    }
+
     Array.prototype.push.apply(queue, adjacentTiles);
 
     // Put in the fathers array
     for (const adj of adjacentTiles) {
+      visited[adj.i][adj.j] = true;
       fathers[adj.i][adj.j] = currentTile;
       distance[adj.i][adj.j] = distance[currentTile.i][currentTile.j] + 1;
     }
   }
-  const flatArray = distance.reduce((acc, innerArray) => [
-    ...acc,
-    ...innerArray,
-  ]);
-  let maxDistance = Math.max(...flatArray);
-  for (let i = 0; i <= maxDistance; i++) {
-    visitedList.push([]);
-  }
-  for (let i = 0; i < distance.length; i++) {
-    for (j = 0; j < distance[0].length; j++) {
-      let dist = distance[i][j];
-      if (dist > -1) {
-        visitedList[dist].push({ i, j });
-      }
-    }
-  }
+  visitedList = getVisitedList(distance);
   if (!endingTile) {
     const end = performance.now();
     const time = end - start;
@@ -120,6 +90,5 @@ export const basicPathFinding = (
   visitedList.reverse();
   const end = performance.now();
   const time = end - start;
-  console.log(time);
   return { path, visitedList, time };
 };
