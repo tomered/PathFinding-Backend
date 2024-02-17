@@ -1,4 +1,5 @@
 import { Tiles } from "../constants/tiles";
+import { AlgorithmResponse, CompareResponseType } from "../types/dtos";
 import { Position } from "../types/position";
 import { TilesWithWeight } from "../types/tilesWithWeight";
 
