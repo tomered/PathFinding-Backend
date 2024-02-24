@@ -2,6 +2,7 @@ import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
 import {
+  createImage,
   findElementPosition,
   getAdjacent,
   getVisitedList,
@@ -16,9 +17,14 @@ import { TilesWithWeight } from "../types/tilesWithWeight";
  * @param {Tiles[][]} graph matrix composed of tiles
  * @returns { path: Position[]; visitedList: Position[][]; time: number }  the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
  */
-export const AStarSearch = (
+export const AStarSearch = async (
   graph: Tiles[][]
-): { path: Position[]; visitedList: Position[][]; time: number } => {
+): Promise<{
+  path: Position[];
+  visitedList: Position[][];
+  time: number;
+  imageString: string;
+}> => {
   const start = performance.now();
   const length = graph.length;
   const width = graph[0].length;
@@ -89,9 +95,10 @@ export const AStarSearch = (
 
   // if there is no path to the ending tile
   if (!endingTile) {
+    const imageString = await createImage(graph, visitedList, path);
     const end = performance.now();
     const time = end - start;
-    return { path: [], visitedList: visitedList.reverse(), time };
+    return { path: [], visitedList: visitedList.reverse(), time, imageString };
   }
   let currentPathTile: Position = endingTile as Position;
   while (
@@ -105,9 +112,10 @@ export const AStarSearch = (
 
   path.reverse();
   visitedList.reverse();
+  const imageString = await createImage(graph, visitedList, path);
   const end = performance.now();
   const time = end - start;
-  return { path, visitedList, time };
+  return { path, visitedList, time, imageString };
 };
 
 /**

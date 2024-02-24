@@ -2,7 +2,12 @@ import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { FathersPosition } from "../types/FathersPosition";
 import { Position } from "../types/position";
-import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
+import {
+  createImage,
+  findElementPosition,
+  getAdjacent,
+  getVisitedList,
+} from "./utils";
 
 /**
  * The function finds the start and the end position, both has a queue for the elements we find from start and the elements we find from the end,
@@ -11,9 +16,14 @@ import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
  * @param graph matrix composed of tiles
  * @returns the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
  */
-export const bidirectionalSearch = (
+export const bidirectionalSearch = async (
   graph: Tiles[][]
-): { path: Position[]; visitedList: Position[][]; time: number } => {
+): Promise<{
+  path: Position[];
+  visitedList: Position[][];
+  time: number;
+  imageString: string;
+}> => {
   const start = performance.now();
   const length = graph.length;
   const width = graph[0].length;
@@ -173,9 +183,10 @@ export const bidirectionalSearch = (
     }
   }
   if (!currentPathFromStartTile || !currentPathFromEndTile) {
+    const imageString = await createImage(graph, visitedList, path);
     const end = performance.now();
     const time = end - start;
-    return { path: [], visitedList: visitedList.reverse(), time };
+    return { path: [], visitedList: visitedList.reverse(), time, imageString };
   }
   let tileInBounds =
     startFathers[currentPathFromStartTile.i][currentPathFromStartTile.j] !==
@@ -220,7 +231,8 @@ export const bidirectionalSearch = (
   path = [...startPath, ...endPath];
 
   visitedList.reverse();
+  const imageString = await createImage(graph, visitedList, path);
   const end = performance.now();
   const time = end - start;
-  return { path, visitedList, time };
+  return { path, visitedList, time, imageString };
 };

@@ -5,3 +5,4 @@ export type Algorithms =
   | "dfs"
   | "bidirectional_search"
   | "a_star_search";
+

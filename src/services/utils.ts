@@ -1,4 +1,5 @@
-import { Tiles } from "../constants/tiles";
+import Jimp from "jimp";
+import { SolveGraph, Tiles } from "../constants/tiles";
 import { AlgorithmResponse, CompareResponseType } from "../types/dtos";
 import { Position } from "../types/position";
 import { TilesWithWeight } from "../types/tilesWithWeight";
@@ -166,4 +167,73 @@ export function getVisitedList(distance: number[][]): Position[][] {
     }
   }
   return visitedList;
+}
+
+export async function createImage(
+  graph: Tiles[][],
+  visitedList: Position[][],
+  path: Position[]
+): Promise<any> {
+  const width = graph[0].length;
+  const length = graph.length;
+  let i: number;
+  let j: number;
+  const imageMatrix: SolveGraph[][] | undefined = Array.from({ length }, () =>
+    Array.from({ length: width }, () => SolveGraph.EMPTY_TILE)
+  );
+  const colorToHex: any = {
+    [SolveGraph.ENDING_TILE]: "red",
+    [SolveGraph.VISITED_LIST_TILE]: "#02bfb3",
+    [SolveGraph.STARTING_TILE]: "green",
+    [SolveGraph.PATH_TILE]: "yellow",
+    [SolveGraph.EMPTY_TILE]: "#FFFFFF",
+    [SolveGraph.BLOCK_TILE]: "gray",
+  };
+  const visitedListArray = visitedList.flat();
+  for (const element of visitedListArray) {
+    imageMatrix[element.i][element.j] = SolveGraph.VISITED_LIST_TILE;
+  }
+
+  for (i = 0; i < length; i++) {
+    for (j = 0; j < width; j++) {
+      // if (visitedList[i][j] != undefined) {
+      //   imageMatrix[i][j] = SolveGraph.VISITED_LIST_TILE;
+      //   console.log("visited", visitedList[i][j]);
+      // }
+      if (graph[i][j] == Tiles.STARTING_TILE) {
+        imageMatrix[i][j] = SolveGraph.STARTING_TILE;
+        console.log("graph: ", graph[i][j]);
+      }
+      if (graph[i][j] == Tiles.ENDING_TILE) {
+        imageMatrix[i][j] = SolveGraph.ENDING_TILE;
+      }
+      if (graph[i][j] == Tiles.BLOCK_TILE) {
+        imageMatrix[i][j] = SolveGraph.BLOCK_TILE;
+      }
+    }
+  }
+  for (const tile of path) {
+    imageMatrix[tile.i][tile.j] = SolveGraph.PATH_TILE;
+  }
+
+  const image = new Jimp(width, length, "#FFFFFF", (err: any, image: any) => {
+    if (err) {
+      throw err;
+    }
+  });
+  imageMatrix.forEach((row: any[], y: any) => {
+    row.forEach((colorName, x) => {
+      const hex = colorToHex[colorName];
+      image.setPixelColor(Jimp.cssColorToHex(hex), x, y);
+      console.log("setting color", x, y, hex, Jimp.cssColorToHex(hex));
+    });
+  });
+  console.log("image", image.getBase64Async(Jimp.AUTO));
+  const result = await image.getBase64Async(Jimp.AUTO);
+  console.log("result: ", result);
+  image.write("output.png", (err) => {
+    if (err) throw err;
+    console.log("Image created and saved successfully!");
+  });
+  return result;
 }
