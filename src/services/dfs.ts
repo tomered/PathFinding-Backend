@@ -1,6 +1,11 @@
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
+import {
+  createImage,
+  findElementPosition,
+  getAdjacent,
+  getVisitedList,
+} from "./utils";
 
 /**
  * The function finds the starting position and than push it into a stack, loop over the stack and pop the last element, than push all of its adjacent to the stack,
@@ -9,9 +14,14 @@ import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
  * @returns { path: Position[]; visitedList: Position[][]; time: number }  the short path from starting position to the end position, the tiles we visited, the amount of time the function runs
  */
 
-export const DFS = (
+export const DFS = async (
   graph: Tiles[][]
-): { path: Position[]; visitedList: Position[][]; time: number } => {
+): Promise<{
+  path: Position[];
+  visitedList: Position[][];
+  time: number;
+  imageString: string;
+}> => {
   const start = performance.now();
   const length = graph.length;
   const width = graph[0].length;
@@ -82,9 +92,10 @@ export const DFS = (
   visitedList = getVisitedList(distance);
 
   if (!endingTile) {
+    const imageString = await createImage(graph, visitedList, path);
     const end = performance.now();
     const time = end - start;
-    return { path: [], visitedList: visitedList.reverse(), time };
+    return { path: [], visitedList: visitedList.reverse(), time, imageString };
   }
   let currentPathTile: Position = endingTile as Position;
   while (
@@ -98,8 +109,9 @@ export const DFS = (
 
   path.reverse();
   visitedList.reverse();
+  const imageString = await createImage(graph, visitedList, path);
   const end = performance.now();
   const time = end - start;
   console.log(time);
-  return { path, visitedList, time };
+  return { path, visitedList, time, imageString };
 };

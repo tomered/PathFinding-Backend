@@ -12,6 +12,8 @@ import { AStarSearch } from "./services/AstarSearch";
 import { algorithmsMap } from "./constants/algorithmsMap";
 import { Position } from "./types/position";
 import { Algorithms } from "./types/Algorithms";
+import { AlgorithmResponse, CompareResponseType } from "./types/dtos";
+import { createImage } from "./services/utils";
 
 const http = require("http");
 dotenv.config();
@@ -55,8 +57,10 @@ app.post("/solve-graph", async (req: Request, res: Response) => {
       return res.status(400).send("algorithm does not exist");
     }
 
-    const { path, visitedList, time } = algorithmsMap[algorithm]?.(graph);
-    const searchedTiles = visitedList.length;
+    const { path, visitedList, time, imageString } = await algorithmsMap[
+      algorithm
+    ]?.(graph);
+    const searchedTiles = visitedList.flat().length;
     const pathSize = path.length;
     const pathFinding = new PathFinding({
       graph,
@@ -66,12 +70,46 @@ app.post("/solve-graph", async (req: Request, res: Response) => {
       searchedTiles,
       pathSize,
       algorithm,
+      imageString,
     });
     await pathFinding.save();
     res.send({ path, visitedList }).status(200);
   } catch (err: any) {
     console.log(err);
     res.send({ err: err.message }).status(400);
+  }
+});
+
+app.post("/compare", async (req: Request, res: Response) => {
+  const graph: Tiles[][] = req.body.graph;
+  console.log("enter to compare");
+  try {
+    const bfsSolution: AlgorithmResponse = await basicPathFinding(graph);
+    const dfsSolution: AlgorithmResponse = await DFS(graph);
+    const bidirectionalSearchSolution: AlgorithmResponse =
+      await bidirectionalSearch(graph);
+    const aStarSearchSolution: AlgorithmResponse = await AStarSearch(graph);
+    const solution: CompareResponseType = {
+      bfs: bfsSolution,
+      dfs: dfsSolution,
+      bidirectional_search: bidirectionalSearchSolution,
+      a_star_search: aStarSearchSolution,
+    };
+
+    for (const algo in solution) {
+      const algorithmSolution = solution[algo as Algorithms];
+      const pathFinding = new PathFinding({
+        algorithm: algo,
+        graph,
+        ...algorithmSolution,
+      });
+      await pathFinding.save();
+    }
+
+    return res.send(solution).status(200);
+  } catch (err: any) {
+    console.log("error", err);
+    return res.send({ err: err.message }).status(400);
   }
 });
 

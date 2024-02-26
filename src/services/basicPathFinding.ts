@@ -1,7 +1,12 @@
 import { error } from "console";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
-import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
+import {
+  createImage,
+  findElementPosition,
+  getAdjacent,
+  getVisitedList,
+} from "./utils";
 
 /**
  * The function finds the starting point and add it to a queue, afterwards we pop the first element from the queue and use getAdjacent function
@@ -11,9 +16,14 @@ import { findElementPosition, getAdjacent, getVisitedList } from "./utils";
  * @param {Tiles[][]} graph matrix composed of tiles
  * @returns {Position[]} the short path from starting position to the end position
  */
-export const basicPathFinding = (
+export const basicPathFinding = async(
   graph: Tiles[][]
-): { path: Position[]; visitedList: Position[][]; time: number } => {
+): Promise<{
+  path: Position[];
+  visitedList: Position[][];
+  time: number;
+  imageString: string;
+}> => {
   const start = performance.now();
   const length = graph.length;
   const width = graph[0].length;
@@ -72,9 +82,10 @@ export const basicPathFinding = (
   }
   visitedList = getVisitedList(distance);
   if (!endingTile) {
+    const imageString = await createImage(graph, visitedList, path);
     const end = performance.now();
     const time = end - start;
-    return { path: [], visitedList: visitedList.reverse(), time };
+    return { path: [], visitedList: visitedList.reverse(), time, imageString };
   }
   let currentPathTile: Position = endingTile as Position;
   while (
@@ -88,7 +99,8 @@ export const basicPathFinding = (
 
   path.reverse();
   visitedList.reverse();
+  const imageString = await createImage(graph, visitedList, path);
   const end = performance.now();
   const time = end - start;
-  return { path, visitedList, time };
+  return { path, visitedList, time, imageString };
 };

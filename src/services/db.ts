@@ -1,4 +1,4 @@
-import mongoose, { connect } from "mongoose";
+import mongoose, { Schema, connect } from "mongoose";
 import { Tiles } from "../constants/tiles";
 import { Position } from "../types/position";
 
@@ -23,6 +23,7 @@ const pathFindingSchema = new mongoose.Schema({
   time: { type: String },
   searchedTiles: { type: Number },
   pathSize: { type: Number },
+  imageString: { type: String },
 });
 
 export const PathFinding = mongoose.model("pathFinding", pathFindingSchema);
